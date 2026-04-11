@@ -4,22 +4,30 @@ interface Props {
   connected: boolean
   slideIndex: number
   totalSlides: number
+  title?: string
 }
 
-export function Header({ connected, slideIndex, totalSlides }: Props) {
+export function Header({
+  connected,
+  slideIndex,
+  totalSlides,
+  title = 'AI in Clinical Trials',
+}: Props) {
   return (
-    <header className="flex items-center justify-between border-b border-border/50 px-8 py-4">
-      <h2 className="text-sm font-semibold tracking-tight text-foreground">
-        AI in Clinical Trials
-      </h2>
+    <header className="flex items-center justify-between border-b border-border bg-white/80 px-8 py-3.5 backdrop-blur-sm">
+      <h2 className="text-sm font-semibold tracking-tight text-foreground">{title}</h2>
       <div className="flex items-center gap-3">
         <Badge
-          variant={connected ? 'default' : 'secondary'}
-          className={`text-xs ${connected ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400' : ''}`}
+          variant={connected ? 'outline' : 'secondary'}
+          className={`text-xs font-medium ${
+            connected
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'text-muted-foreground'
+          }`}
         >
           <span
             className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${
-              connected ? 'bg-emerald-400' : 'bg-muted-foreground/50'
+              connected ? 'bg-emerald-500' : 'bg-muted-foreground/40'
             }`}
           />
           {connected ? 'Connected' : 'Disconnected'}

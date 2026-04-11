@@ -69,7 +69,7 @@ export default function App() {
 
   if (!started) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background">
+      <div className="hero-bg flex min-h-screen flex-col items-center justify-center gap-8">
         <h1 className="text-center text-5xl font-bold leading-tight tracking-tight text-foreground">
           AI in Clinical Trials
         </h1>
@@ -112,7 +112,7 @@ export default function App() {
           className="flex min-h-0 flex-col border-r border-border/50"
           style={{ width: '65%' }}
         >
-          <SlideView slide={wsState.currentSlide} />
+          <SlideView slide={wsState.currentSlide} totalSlides={TOTAL_SLIDES} />
           <SlideNav total={TOTAL_SLIDES} current={wsState.slideIndex} />
         </div>
         <div className="min-h-0 overflow-y-auto" style={{ width: '35%' }}>
