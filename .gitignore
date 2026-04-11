@@ -1,3 +1,6 @@
+.cursor/
+.claude/
+
 # Logs
 logs
 *.log
