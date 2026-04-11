@@ -42,10 +42,11 @@ export function OrbPanel({
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 px-6 py-10">
-      <div className="h-[280px] w-[280px] flex-shrink-0">
+      <div className="h-[280px] w-[280px] flex-shrink-0 shadow-2xl">
         <VoicePoweredOrb
           hue={hue}
           hoverIntensity={intensity}
+          audioLevel={rmsLevel}
           enableVoiceControl={false}
           className="h-full w-full"
         />
