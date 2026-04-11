@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Header } from '@/components/Header'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { OrbPanel } from '@/components/OrbPanel'
 import { SlideNav } from '@/components/SlideNav'
 import { SlideView } from '@/components/SlideView'
@@ -69,7 +70,10 @@ export default function App() {
 
   if (!started) {
     return (
-      <div className="hero-bg flex min-h-screen flex-col items-center justify-center gap-8">
+      <div className="hero-bg relative flex min-h-screen flex-col items-center justify-center gap-8 px-4">
+        <div className="absolute right-4 top-4 sm:right-8 sm:top-6">
+          <ThemeToggle />
+        </div>
         <h1 className="text-center text-5xl font-bold leading-tight tracking-tight text-foreground">
           AI in Clinical Trials
         </h1>
@@ -96,7 +100,7 @@ export default function App() {
         </div>
       ) : null}
       {micDenied && !wsState.error ? (
-        <div className="border-b border-amber-500/30 bg-amber-500/10 px-8 py-2 text-center text-sm text-amber-400">
+        <div className="border-b border-amber-500/30 bg-amber-500/10 px-8 py-2 text-center text-sm text-amber-700 dark:text-amber-400">
           Microphone access denied. Please allow microphone permission and refresh.
         </div>
       ) : null}
@@ -115,7 +119,10 @@ export default function App() {
           <SlideView slide={wsState.currentSlide} totalSlides={TOTAL_SLIDES} />
           <SlideNav total={TOTAL_SLIDES} current={wsState.slideIndex} />
         </div>
-        <div className="min-h-0 overflow-y-auto" style={{ width: '35%' }}>
+        <div
+          className="min-h-0 overflow-y-auto border-l border-border/30 bg-muted/[0.08] dark:border-white/5 dark:bg-slate-950/55"
+          style={{ width: '35%' }}
+        >
           <OrbPanel
             voiceState={voiceState}
             transcript={wsState.transcript}

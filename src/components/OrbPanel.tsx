@@ -42,7 +42,9 @@ export function OrbPanel({
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 px-6 py-10">
-      <div className="h-[280px] w-[280px] flex-shrink-0 shadow-2xl">
+      <div
+        className="h-[280px] w-[280px] flex-shrink-0 overflow-hidden rounded-2xl border border-border/20 bg-white/[0.18] p-0.5 shadow-sm backdrop-blur-lg dark:border-white/10 dark:bg-slate-950/[0.45] dark:shadow-none"
+      >
         <VoicePoweredOrb
           hue={hue}
           hoverIntensity={intensity}
@@ -74,7 +76,7 @@ export function OrbPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-xs italic leading-relaxed text-emerald-400/80"
+              className="text-xs italic leading-relaxed text-emerald-600/90 dark:text-emerald-400/85"
             >
               &ldquo;{transcript}&rdquo;
             </motion.p>
@@ -85,7 +87,7 @@ export function OrbPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="line-clamp-3 text-xs italic leading-relaxed text-indigo-300/80"
+              className="line-clamp-3 text-xs italic leading-relaxed text-indigo-600/85 dark:text-indigo-300/85"
             >
               &ldquo;{agentText}&rdquo;
             </motion.p>

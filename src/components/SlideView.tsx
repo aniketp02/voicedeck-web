@@ -13,7 +13,7 @@ export function SlideView({ slide, totalSlides = 6 }: Props) {
   if (!slide) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden p-5">
-        <div className="flex flex-1 items-center justify-center rounded-xl border border-border/60 bg-white shadow-sm">
+        <div className="flex flex-1 items-center justify-center rounded-xl border border-border/60 bg-card shadow-sm dark:border-border/50 dark:shadow-none">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -28,7 +28,7 @@ export function SlideView({ slide, totalSlides = 6 }: Props) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden p-5">
-      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-white shadow-[0_1px_16px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-[0_1px_16px_rgba(0,0,0,0.06)] dark:border-border/50 dark:shadow-[0_1px_24px_rgba(0,0,0,0.35)]">
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.index}

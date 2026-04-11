@@ -68,6 +68,35 @@
   --ring: 243 75% 59%;
 }
 
+.dark {
+  --background: 224 71% 5%;
+  --foreground: 210 20% 98%;
+
+  --card: 224 71% 8%;
+  --card-foreground: 210 20% 98%;
+  --popover: 224 71% 8%;
+  --popover-foreground: 210 20% 98%;
+
+  --primary: 243 75% 63%;
+  --primary-foreground: 224 71% 5%;
+
+  --secondary: 215 28% 16%;
+  --secondary-foreground: 210 20% 98%;
+
+  --muted: 215 28% 16%;
+  --muted-foreground: 217 10% 64%;
+
+  --accent: 215 28% 18%;
+  --accent-foreground: 210 20% 98%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 215 24% 18%;
+  --input: 215 24% 18%;
+  --ring: 243 75% 63%;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -84,4 +113,12 @@
     radial-gradient(ellipse at 78% 30%, hsl(199 89% 93%) 0%, transparent 55%),
     radial-gradient(ellipse at 55% 80%, hsl(280 60% 96%) 0%, transparent 45%),
     hsl(220 20% 97%);
+}
+
+.dark .hero-bg {
+  background:
+    radial-gradient(ellipse at 20% 45%, hsl(243 45% 22%) 0%, transparent 55%),
+    radial-gradient(ellipse at 78% 30%, hsl(199 50% 18%) 0%, transparent 55%),
+    radial-gradient(ellipse at 55% 80%, hsl(280 35% 18%) 0%, transparent 45%),
+    hsl(224 71% 7%);
 }

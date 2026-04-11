@@ -23,7 +23,7 @@ export function MicButton({
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-xs text-indigo-400/70"
+          className="text-xs text-indigo-600/80 dark:text-indigo-400/75"
         >
           Speak to interrupt
         </motion.p>
