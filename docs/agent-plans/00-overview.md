@@ -69,10 +69,10 @@ In VoxSlide we control hue externally — set `enableVoiceControl={false}` and d
 ## Dev Setup
 
 ```bash
-cd frontend
+cd voicedeck-web
 npm install
 npm run dev   # http://localhost:5173
-# Backend must be running: cd ../backend && uvicorn app.main:app --port 8000
+# Backend must be running: cd ../voicedeck && source venv/bin/activate && uvicorn app.main:app --port 8000
 ```
 
 ## WebSocket Protocol (backend contract — do not change)
