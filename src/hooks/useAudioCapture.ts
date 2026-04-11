@@ -10,7 +10,14 @@ import type { ClientMessage } from '@/types/protocol'
 const SAMPLE_RATE = 16000
 /** ScriptProcessorNode only allows powers of two 256–16384 (not e.g. 1600). 2048 ≈ 128ms @ 16kHz. */
 const BUFFER_SIZE = 2048
+/** Default VAD threshold — tuned for quiet ambient conditions. */
 const VAD_THRESHOLD = 0.012
+/**
+ * Lower threshold used while TTS is active.
+ * Speaker echo raises ambient RMS; lowering the threshold makes it easier
+ * for the user's voice to cross it and trigger an interrupt.
+ */
+const VAD_THRESHOLD_DURING_TTS = 0.008
 const VAD_RELEASE_FRAMES = 8
 
 interface UseAudioCaptureOptions {
@@ -44,9 +51,14 @@ export function useAudioCapture({
   const isTTSActiveRef = useRef(isTTSActive)
   const onChunkRef = useRef(onChunk)
   const onInterruptRef = useRef(onInterrupt)
+  /** At most one interrupt per TTS episode; reset when TTS ends. */
+  const interruptSentRef = useRef(false)
 
   useEffect(() => {
     isTTSActiveRef.current = isTTSActive
+    if (!isTTSActive) {
+      interruptSentRef.current = false
+    }
   }, [isTTSActive])
   useEffect(() => {
     onChunkRef.current = onChunk
@@ -83,12 +95,17 @@ export function useAudioCapture({
 
         setRmsLevel(rms)
 
-        const voiceActive = rms > VAD_THRESHOLD
+        const threshold = isTTSActiveRef.current
+          ? VAD_THRESHOLD_DURING_TTS
+          : VAD_THRESHOLD
+
+        const voiceActive = rms > threshold
         if (voiceActive) {
           silenceFramesRef.current = 0
           setIsUserSpeaking(true)
 
-          if (isTTSActiveRef.current) {
+          if (isTTSActiveRef.current && !interruptSentRef.current) {
+            interruptSentRef.current = true
             onInterruptRef.current()
           }
         } else {
@@ -132,6 +149,7 @@ export function useAudioCapture({
     setIsUserSpeaking(false)
     setRmsLevel(0)
     silenceFramesRef.current = 0
+    interruptSentRef.current = false
   }, [])
 
   const controls = useMemo(() => ({ start, stop }), [start, stop])

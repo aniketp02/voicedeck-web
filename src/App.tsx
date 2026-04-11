@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Header } from '@/components/Header'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { OrbPanel } from '@/components/OrbPanel'
 import { SlideNav } from '@/components/SlideNav'
 import { SlideView } from '@/components/SlideView'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAudioCapture } from '@/hooks/useAudioCapture'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { useVoiceState } from '@/hooks/useVoiceState'
@@ -74,17 +74,22 @@ export default function App() {
         <div className="absolute right-4 top-4 sm:right-8 sm:top-6">
           <ThemeToggle />
         </div>
-        <h1 className="text-center text-5xl font-bold leading-tight tracking-tight text-foreground">
-          AI in Clinical Trials
-        </h1>
-        <p className="max-w-md text-center text-lg text-muted-foreground">
-          A voice-interactive presentation. Ask questions, get answers — the slides follow
-          the conversation.
-        </p>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/70 px-4 py-1.5 text-xs font-medium text-indigo-700 shadow-sm backdrop-blur-sm dark:border-indigo-500/30 dark:bg-slate-900/70 dark:text-indigo-200">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            Voice-Interactive Presentation
+          </div>
+          <h1 className="text-5xl font-bold leading-tight tracking-tight text-foreground">
+            AI in Clinical Trials
+          </h1>
+          <p className="max-w-md text-lg text-muted-foreground">
+            Ask questions, get answers — the slides follow the conversation.
+          </p>
+        </div>
         <button
           type="button"
           onClick={handlePresentationStart}
-          className="rounded-2xl bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          className="rounded-2xl bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground shadow-lg shadow-indigo-200/80 transition-all hover:opacity-90 hover:shadow-indigo-300/90 active:scale-95 dark:shadow-indigo-950/50"
         >
           Start Presentation
         </button>
@@ -112,17 +117,11 @@ export default function App() {
       />
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div
-          className="flex min-h-0 flex-col border-r border-border/50"
-          style={{ width: '65%' }}
-        >
+        <div className="flex min-h-0 flex-col bg-background" style={{ width: '65%' }}>
           <SlideView slide={wsState.currentSlide} totalSlides={TOTAL_SLIDES} />
           <SlideNav total={TOTAL_SLIDES} current={wsState.slideIndex} />
         </div>
-        <div
-          className="min-h-0 overflow-y-auto border-l border-border/30 bg-muted/[0.08] dark:border-white/5 dark:bg-slate-950/55"
-          style={{ width: '35%' }}
-        >
+        <div className="min-h-0 overflow-y-auto bg-slate-950" style={{ width: '35%' }}>
           <OrbPanel
             voiceState={voiceState}
             transcript={wsState.transcript}
@@ -132,11 +131,12 @@ export default function App() {
             rmsLevel={captureState.rmsLevel}
             onMicStart={handleMicStart}
             onMicStop={handleMicStop}
+            onInterrupt={handleInterrupt}
           />
         </div>
       </div>
 
-      <footer className="border-t border-border/50 bg-background/80 px-8 py-3 backdrop-blur">
+      <footer className="border-t border-border/50 bg-background/80 px-8 py-3 backdrop-blur dark:border-white/10">
         <div className="flex flex-col gap-1 text-sm sm:flex-row sm:justify-between sm:gap-8">
           <p className="min-w-0 truncate text-muted-foreground">
             <span className="font-medium text-foreground">You:</span>{' '}

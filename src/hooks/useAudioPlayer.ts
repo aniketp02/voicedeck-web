@@ -149,10 +149,34 @@ export function useAudioPlayer(): AudioPlayerControls {
 
   const stop = useCallback(() => {
     sessionActiveRef.current = false
-    audioRef.current?.pause()
     chunkQueueRef.current = []
     isAppendingRef.current = false
-    teardown()
+
+    const audio = audioRef.current
+    if (!audio || audio.paused) {
+      teardown()
+      return
+    }
+
+    // 120ms volume ramp-down before pause — prevents jarring click
+    const initialVolume = audio.volume
+    const startTime = performance.now()
+    const FADE_MS = 120
+
+    const ramp = () => {
+      const elapsed = performance.now() - startTime
+      if (elapsed >= FADE_MS) {
+        audio.volume = 0
+        audio.pause()
+        audio.volume = initialVolume // restore for next session
+        teardown()
+        return
+      }
+      audio.volume = initialVolume * (1 - elapsed / FADE_MS)
+      requestAnimationFrame(ramp)
+    }
+
+    requestAnimationFrame(ramp)
   }, [teardown])
 
   useEffect(() => () => teardown(), [teardown])

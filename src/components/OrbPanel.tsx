@@ -17,6 +17,7 @@ interface Props {
   rmsLevel: number
   onMicStart: () => void
   onMicStop: () => void
+  onInterrupt: () => void
 }
 
 function orbHoverIntensity(state: VoiceState): number {
@@ -35,16 +36,15 @@ export function OrbPanel({
   rmsLevel,
   onMicStart,
   onMicStop,
+  onInterrupt,
 }: Props) {
   const hue = voiceStateToHue(voiceState)
   const label = voiceStateToLabel(voiceState)
   const intensity = orbHoverIntensity(voiceState)
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-6 px-6 py-10">
-      <div
-        className="h-[280px] w-[280px] flex-shrink-0 overflow-hidden rounded-2xl border border-border/20 bg-white/[0.18] p-0.5 shadow-sm backdrop-blur-lg dark:border-white/10 dark:bg-slate-950/[0.45] dark:shadow-none"
-      >
+    <div className="flex h-full flex-col items-center justify-center gap-5 bg-slate-950 px-6 py-8">
+      <div className="h-[260px] w-[260px] flex-shrink-0">
         <VoicePoweredOrb
           hue={hue}
           hoverIntensity={intensity}
@@ -61,10 +61,10 @@ export function OrbPanel({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.2 }}
-          className="flex flex-col items-center gap-1 text-center"
+          className="flex flex-col items-center gap-1.5 text-center"
         >
           <StatusDot state={voiceState} />
-          <span className="text-sm font-medium text-foreground">{label}</span>
+          <span className="text-sm font-medium text-slate-100">{label}</span>
         </motion.div>
       </AnimatePresence>
 
@@ -76,7 +76,7 @@ export function OrbPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-xs italic leading-relaxed text-emerald-600/90 dark:text-emerald-400/85"
+              className="text-xs italic leading-relaxed text-emerald-400/80"
             >
               &ldquo;{transcript}&rdquo;
             </motion.p>
@@ -87,7 +87,7 @@ export function OrbPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="line-clamp-3 text-xs italic leading-relaxed text-indigo-600/85 dark:text-indigo-300/85"
+              className="line-clamp-3 text-xs italic leading-relaxed text-indigo-300/80"
             >
               &ldquo;{agentText}&rdquo;
             </motion.p>
@@ -95,21 +95,52 @@ export function OrbPanel({
         </AnimatePresence>
       </div>
 
-      <MicButton
-        isCapturing={isCapturing}
-        isTTSActive={isTTSActive}
-        rmsLevel={rmsLevel}
-        onStart={onMicStart}
-        onStop={onMicStop}
-      />
+      <AnimatePresence>
+        {voiceState === 'ai-speaking' ? (
+          <motion.button
+            key="interrupt-btn"
+            type="button"
+            onClick={onInterrupt}
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/15 px-5 py-2.5 text-sm font-medium text-indigo-200 transition-colors hover:bg-indigo-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          >
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-indigo-400" />
+            Tap to interrupt
+          </motion.button>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {voiceState !== 'ai-speaking' ? (
+          <motion.div
+            key="mic"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <MicButton
+              isCapturing={isCapturing}
+              isTTSActive={isTTSActive}
+              rmsLevel={rmsLevel}
+              onStart={onMicStart}
+              onStop={onMicStop}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }
 
 function StatusDot({ state }: { state: VoiceState }) {
   const colors: Record<VoiceState, string> = {
-    idle: 'bg-muted-foreground/40',
-    listening: 'bg-primary animate-pulse',
+    idle: 'bg-slate-500',
+    listening: 'bg-violet-400 animate-pulse',
     'user-speaking': 'bg-emerald-400',
     thinking: 'bg-amber-400 animate-pulse',
     'ai-speaking': 'bg-indigo-400',

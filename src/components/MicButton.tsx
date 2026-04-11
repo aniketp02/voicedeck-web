@@ -2,47 +2,33 @@ import { motion } from 'framer-motion'
 
 interface Props {
   isCapturing: boolean
+  /** Kept for callers; interrupt affordance lives in OrbPanel. */
   isTTSActive: boolean
   rmsLevel: number
   onStart: () => void
   onStop: () => void
 }
 
-export function MicButton({
-  isCapturing,
-  isTTSActive,
-  rmsLevel,
-  onStart,
-  onStop,
-}: Props) {
+export function MicButton({ isCapturing, rmsLevel, onStart, onStop }: Props) {
   const scale = isCapturing ? 1 + rmsLevel * 2 : 1
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {isTTSActive ? (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-xs text-indigo-600/80 dark:text-indigo-400/75"
-        >
-          Speak to interrupt
-        </motion.p>
-      ) : null}
       <motion.button
         type="button"
         onClick={isCapturing ? onStop : onStart}
         animate={{ scale }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors ${
+        className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg shadow-black/30 transition-colors ${
           isCapturing
             ? 'bg-emerald-600 hover:bg-emerald-500'
-            : 'bg-primary hover:bg-primary/90'
+            : 'bg-indigo-600 hover:bg-indigo-500'
         }`}
         aria-label={isCapturing ? 'Stop microphone' : 'Start microphone'}
       >
         <MicIcon active={isCapturing} />
       </motion.button>
-      <span className="text-xs text-muted-foreground">
+      <span className="text-xs text-slate-400">
         {isCapturing ? 'Tap to stop' : 'Tap to speak'}
       </span>
     </div>
