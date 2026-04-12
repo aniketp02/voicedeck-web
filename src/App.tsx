@@ -39,7 +39,14 @@ export default function App() {
       stopAutoNarrate,
     },
   ] = useWebSocket()
-  const audioPlayer = useAudioPlayer(endAssistantPlayback)
+  // When the audio element fires 'ended', update local state AND tell the server
+  // so auto_narrate_loop knows it's safe to advance to the next slide.
+  const handlePlaybackEnd = useCallback(() => {
+    endAssistantPlayback()
+    send({ type: 'tts_playback_done' })
+  }, [endAssistantPlayback, send])
+
+  const audioPlayer = useAudioPlayer(handlePlaybackEnd)
 
   const handleInterrupt = useCallback(() => {
     send({ type: 'interrupt' })

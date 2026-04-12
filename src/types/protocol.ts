@@ -17,6 +17,7 @@ export type ClientMessage =
   | { type: 'navigate'; index: number }
   | { type: 'start_auto_narrate' }
   | { type: 'stop_auto_narrate' }
+  | { type: 'tts_playback_done' }
   | { type: 'ping' }
 
 export interface SlideData {
