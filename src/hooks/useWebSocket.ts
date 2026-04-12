@@ -32,6 +32,8 @@ export interface WebSocketControls {
   onTTSDone: MutableRefObject<(() => void) | null>
   /** Call when local TTS playback actually ends (not when the server sends tts_done). */
   endAssistantPlayback: () => void
+  /** Clear in-progress assistant text (e.g. user interrupt) so the UI does not show stale copy. */
+  clearAgentDisplay: () => void
 }
 
 const INITIAL_STATE: WebSocketState = {
@@ -67,6 +69,10 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     }))
   }, [])
 
+  const clearAgentDisplay = useCallback(() => {
+    setState((s) => ({ ...s, agentText: '' }))
+  }, [])
+
   const handleMessage = useCallback((msg: ServerMessage) => {
     switch (msg.type) {
       case 'slide_change':
@@ -76,18 +82,26 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
           slideIndex: msg.index,
           agentText: '',
           hasFinalTranscript: false,
-          agentTurnActive: false,
+          // Do not clear agentTurnActive here. The agent may send slide_change before
+          // agent_text/tts; clearing it caused a flash to "listening" before audio.
+          // endAssistantPlayback clears it when local TTS actually ends.
         }))
         break
 
-      case 'transcript':
+      case 'transcript': {
+        const hasFinalTranscript =
+          (msg.speech_final ?? msg.is_final) && msg.text.trim().length > 0
+        // New user utterance (Deepgram utterance end): drop previous assistant text so
+        // "thinking" does not still show the last reply in the chat footer.
+        const newUtterance = Boolean(msg.speech_final && msg.text.trim())
         setState((s) => ({
           ...s,
           transcript: msg.text,
-          hasFinalTranscript:
-            (msg.speech_final ?? msg.is_final) && msg.text.trim().length > 0,
+          hasFinalTranscript,
+          ...(newUtterance ? { agentText: '' } : {}),
         }))
         break
+      }
 
       case 'agent_text':
         setState((s) => ({
@@ -197,6 +211,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     onTTSChunk,
     onTTSDone,
     endAssistantPlayback,
+    clearAgentDisplay,
   }
   return [state, controls]
 }

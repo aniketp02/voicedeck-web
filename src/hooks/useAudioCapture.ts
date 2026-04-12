@@ -24,7 +24,6 @@ interface UseAudioCaptureOptions {
   onChunk: (msg: ClientMessage) => void
   onInterrupt: () => void
   isTTSActive: boolean
-  /** True while assistant owns the turn (agent text until TTS done). Enables VAD interrupt before first audio chunk. */
   agentTurnActive: boolean
 }
 
@@ -52,7 +51,6 @@ export function useAudioCapture({
   const streamRef = useRef<MediaStream | null>(null)
   const silenceFramesRef = useRef(0)
   const isTTSActiveRef = useRef(isTTSActive)
-  const agentTurnActiveRef = useRef(agentTurnActive)
   const onChunkRef = useRef(onChunk)
   const onInterruptRef = useRef(onInterrupt)
   /** At most one interrupt per assistant turn; reset when turn ends. */
@@ -60,7 +58,6 @@ export function useAudioCapture({
 
   useEffect(() => {
     isTTSActiveRef.current = isTTSActive
-    agentTurnActiveRef.current = agentTurnActive
     if (!isTTSActive && !agentTurnActive) {
       interruptSentRef.current = false
     }
@@ -100,9 +97,12 @@ export function useAudioCapture({
 
         setRmsLevel(rms)
 
-        const interruptPhase =
-          isTTSActiveRef.current || agentTurnActiveRef.current
-        const threshold = interruptPhase
+        // Only arm VAD barge-in while assistant audio is actually streaming. If we also
+        // keyed off agentTurnActive, ambient noise after agent_text (before the first
+        // tts_chunk) sent interrupt → server skipped TTS (interrupt_event set) while the
+        // slide still updated — common on "go to next slide and explain" with slower Deepgram.
+        const vadInterruptArmed = isTTSActiveRef.current
+        const threshold = vadInterruptArmed
           ? VAD_THRESHOLD_DURING_TTS
           : VAD_THRESHOLD
 
@@ -111,7 +111,7 @@ export function useAudioCapture({
           silenceFramesRef.current = 0
           setIsUserSpeaking(true)
 
-          if (interruptPhase && !interruptSentRef.current) {
+          if (vadInterruptArmed && !interruptSentRef.current) {
             interruptSentRef.current = true
             onInterruptRef.current()
           }

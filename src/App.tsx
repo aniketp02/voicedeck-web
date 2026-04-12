@@ -34,14 +34,16 @@ export default function App() {
       onTTSChunk: onTTSChunkRef,
       onTTSDone: onTTSDoneRef,
       endAssistantPlayback,
+      clearAgentDisplay,
     },
   ] = useWebSocket()
   const audioPlayer = useAudioPlayer(endAssistantPlayback)
 
   const handleInterrupt = useCallback(() => {
     send({ type: 'interrupt' })
+    clearAgentDisplay()
     audioPlayer.stop()
-  }, [send, audioPlayer])
+  }, [send, clearAgentDisplay, audioPlayer])
 
   const [captureState, captureControls] = useAudioCapture({
     onChunk: send,
