@@ -19,6 +19,15 @@ const VAD_THRESHOLD = 0.012
  */
 const VAD_THRESHOLD_DURING_TTS = 0.008
 const VAD_RELEASE_FRAMES = 8
+/**
+ * Consecutive frames above the interrupt threshold required before firing
+ * a barge-in interrupt. At BUFFER_SIZE=2048 / 16 kHz = 128 ms per frame:
+ *   1 frame = 128 ms  — fires on any single loud event (cough, click)
+ *   2 frames = 256 ms — rejects single-frame noise; genuine speech still fast
+ * 2 frames is the right default: imperceptible latency increase, drops
+ * nearly all false-positive interrupts from ambient noise during TTS.
+ */
+const VAD_BARGE_IN_FRAMES = 2
 
 interface UseAudioCaptureOptions {
   onChunk: (msg: ClientMessage) => void
@@ -50,6 +59,7 @@ export function useAudioCapture({
   const processorRef = useRef<ScriptProcessorNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const silenceFramesRef = useRef(0)
+  const consecutiveVoiceFramesRef = useRef(0)
   const isTTSActiveRef = useRef(isTTSActive)
   const onChunkRef = useRef(onChunk)
   const onInterruptRef = useRef(onInterrupt)
@@ -109,13 +119,19 @@ export function useAudioCapture({
         const voiceActive = rms > threshold
         if (voiceActive) {
           silenceFramesRef.current = 0
+          consecutiveVoiceFramesRef.current++
           setIsUserSpeaking(true)
 
-          if (vadInterruptArmed && !interruptSentRef.current) {
+          if (
+            vadInterruptArmed &&
+            !interruptSentRef.current &&
+            consecutiveVoiceFramesRef.current >= VAD_BARGE_IN_FRAMES
+          ) {
             interruptSentRef.current = true
             onInterruptRef.current()
           }
         } else {
+          consecutiveVoiceFramesRef.current = 0
           silenceFramesRef.current++
           if (silenceFramesRef.current >= VAD_RELEASE_FRAMES) {
             setIsUserSpeaking(false)
@@ -156,6 +172,7 @@ export function useAudioCapture({
     setIsUserSpeaking(false)
     setRmsLevel(0)
     silenceFramesRef.current = 0
+    consecutiveVoiceFramesRef.current = 0
     interruptSentRef.current = false
   }, [])
 
