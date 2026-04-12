@@ -68,7 +68,7 @@ export function OrbPanel({
         </motion.div>
       </AnimatePresence>
 
-      <div className="min-h-[3rem] w-full px-2 text-center">
+      <div className="min-h-[3rem] w-full max-w-sm px-2 text-center">
         <AnimatePresence mode="wait">
           {voiceState === 'user-speaking' && transcript ? (
             <motion.p
@@ -87,7 +87,7 @@ export function OrbPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="line-clamp-3 text-xs italic leading-relaxed text-indigo-300/80"
+              className="line-clamp-4 text-xs italic leading-relaxed text-indigo-300/80"
             >
               &ldquo;{agentText}&rdquo;
             </motion.p>

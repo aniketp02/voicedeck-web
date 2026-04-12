@@ -18,9 +18,17 @@ export default function App() {
     useState<PresentationMeta | null>(null)
   const [started, setStarted] = useState(false)
 
-  const [wsState, { connect, send, onTTSChunk: onTTSChunkRef, onTTSDone: onTTSDoneRef }] =
-    useWebSocket()
-  const audioPlayer = useAudioPlayer()
+  const [
+    wsState,
+    {
+      connect,
+      send,
+      onTTSChunk: onTTSChunkRef,
+      onTTSDone: onTTSDoneRef,
+      endAssistantPlayback,
+    },
+  ] = useWebSocket()
+  const audioPlayer = useAudioPlayer(endAssistantPlayback)
 
   const handleInterrupt = useCallback(() => {
     send({ type: 'interrupt' })
@@ -31,6 +39,7 @@ export default function App() {
     onChunk: send,
     onInterrupt: handleInterrupt,
     isTTSActive: wsState.isTTSActive,
+    agentTurnActive: wsState.agentTurnActive,
   })
 
   const voiceState = useVoiceState({
@@ -128,16 +137,36 @@ export default function App() {
         </div>
       </div>
 
-      <footer className="border-t border-border/50 bg-background/80 px-8 py-3 backdrop-blur dark:border-white/10">
-        <div className="flex flex-col gap-1 text-sm sm:flex-row sm:justify-between sm:gap-8">
-          <p className="min-w-0 truncate text-muted-foreground">
-            <span className="font-medium text-foreground">You:</span>{' '}
-            {wsState.transcript || '—'}
-          </p>
-          <p className="min-w-0 truncate text-right text-muted-foreground sm:max-w-[50%]">
-            <span className="font-medium text-foreground">Agent:</span>{' '}
-            {wsState.agentText || '—'}
-          </p>
+      <footer className="border-t border-border/50 bg-background/80 px-6 py-3 backdrop-blur dark:border-white/10 sm:px-8">
+        <div className="mx-auto grid max-w-6xl gap-3 sm:grid-cols-2 sm:gap-6">
+          <div className="min-h-[2.75rem] rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 dark:bg-emerald-500/[0.08]">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              You
+            </p>
+            <p className="mt-1 max-h-20 overflow-y-auto text-sm text-muted-foreground">
+              {wsState.transcript.trim() ? (
+                <span className="whitespace-pre-wrap">{wsState.transcript}</span>
+              ) : (
+                '—'
+              )}
+            </p>
+          </div>
+          <div className="min-h-[2.75rem] rounded-lg border border-indigo-500/20 bg-indigo-500/[0.06] px-3 py-2 dark:bg-indigo-500/[0.08]">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+              Assistant
+            </p>
+            <p className="mt-1 max-h-20 overflow-y-auto text-sm text-muted-foreground">
+              {voiceState === 'thinking' && !wsState.agentText.trim() ? (
+                <span className="italic text-amber-600/90 dark:text-amber-400/90">
+                  Thinking…
+                </span>
+              ) : wsState.agentText.trim() ? (
+                <span className="whitespace-pre-wrap">{wsState.agentText}</span>
+              ) : (
+                '—'
+              )}
+            </p>
+          </div>
         </div>
       </footer>
     </div>

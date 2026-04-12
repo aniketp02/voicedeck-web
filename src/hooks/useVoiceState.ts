@@ -12,7 +12,7 @@ interface VoiceStateInput {
 
 /**
  * Derives VoiceState from WebSocket + audio (VAD) inputs.
- * Priority: TTS → thinking (final transcript) → user speaking → listening → idle.
+ * Priority: agent turn (text + TTS) → thinking (final transcript) → user speaking → listening → idle.
  */
 export function useVoiceState({
   wsState,
@@ -20,13 +20,14 @@ export function useVoiceState({
   isUserSpeaking,
 }: VoiceStateInput): VoiceState {
   return useMemo((): VoiceState => {
-    if (wsState.isTTSActive) return 'ai-speaking'
+    if (wsState.isTTSActive || wsState.agentTurnActive) return 'ai-speaking'
     if (wsState.hasFinalTranscript) return 'thinking'
     if (isUserSpeaking && isCapturing) return 'user-speaking'
     if (isCapturing) return 'listening'
     return 'idle'
   }, [
     wsState.isTTSActive,
+    wsState.agentTurnActive,
     wsState.hasFinalTranscript,
     isUserSpeaking,
     isCapturing,

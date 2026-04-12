@@ -9,8 +9,16 @@ export interface AudioPlayerControls {
 
 /**
  * Stream MP3 TTS chunks via MediaSource (MSE). First onChunk lazily starts a session.
+ * @param onAssistantPlaybackEnded — invoked when assistant audio stops (natural end, empty stream, or interrupt).
  */
-export function useAudioPlayer(): AudioPlayerControls {
+export function useAudioPlayer(
+  onAssistantPlaybackEnded?: () => void,
+): AudioPlayerControls {
+  const onAssistantPlaybackEndedRef = useRef(onAssistantPlaybackEnded)
+  useEffect(() => {
+    onAssistantPlaybackEndedRef.current = onAssistantPlaybackEnded
+  }, [onAssistantPlaybackEnded])
+
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const mediaSourceRef = useRef<MediaSource | null>(null)
   const sourceBufferRef = useRef<SourceBuffer | null>(null)
@@ -22,7 +30,7 @@ export function useAudioPlayer(): AudioPlayerControls {
 
   const appendNextRef = useRef<() => void>(() => {})
 
-  const teardown = useCallback(() => {
+  const teardown = useCallback((notifyPlaybackEnded = false) => {
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current)
       objectUrlRef.current = null
@@ -34,6 +42,9 @@ export function useAudioPlayer(): AudioPlayerControls {
     chunkQueueRef.current = []
     isAppendingRef.current = false
     sessionActiveRef.current = false
+    if (notifyPlaybackEnded) {
+      onAssistantPlaybackEndedRef.current?.()
+    }
   }, [])
 
   const appendNext = useCallback(() => {
@@ -64,7 +75,7 @@ export function useAudioPlayer(): AudioPlayerControls {
       return
     }
 
-    teardown()
+    teardown(false)
 
     sessionActiveRef.current = true
     chunkQueueRef.current = []
@@ -119,7 +130,7 @@ export function useAudioPlayer(): AudioPlayerControls {
   const onDone = useCallback(() => {
     const ms = mediaSourceRef.current
     if (!ms || ms.readyState !== 'open') {
-      teardown()
+      teardown(true)
       return
     }
 
@@ -132,9 +143,9 @@ export function useAudioPlayer(): AudioPlayerControls {
       sessionActiveRef.current = false
       const audio = audioRef.current
       if (audio && !audio.ended) {
-        audio.addEventListener('ended', () => teardown(), { once: true })
+        audio.addEventListener('ended', () => teardown(true), { once: true })
       } else {
-        teardown()
+        teardown(true)
       }
     }
 
@@ -154,7 +165,7 @@ export function useAudioPlayer(): AudioPlayerControls {
 
     const audio = audioRef.current
     if (!audio || audio.paused) {
-      teardown()
+      teardown(true)
       return
     }
 
@@ -169,7 +180,7 @@ export function useAudioPlayer(): AudioPlayerControls {
         audio.volume = 0
         audio.pause()
         audio.volume = initialVolume // restore for next session
-        teardown()
+        teardown(true)
         return
       }
       audio.volume = initialVolume * (1 - elapsed / FADE_MS)
@@ -179,7 +190,7 @@ export function useAudioPlayer(): AudioPlayerControls {
     requestAnimationFrame(ramp)
   }, [teardown])
 
-  useEffect(() => () => teardown(), [teardown])
+  useEffect(() => () => teardown(false), [teardown])
 
   return useMemo(
     () => ({ initSession, onChunk, onDone, stop }),

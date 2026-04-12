@@ -24,6 +24,8 @@ interface UseAudioCaptureOptions {
   onChunk: (msg: ClientMessage) => void
   onInterrupt: () => void
   isTTSActive: boolean
+  /** True while assistant owns the turn (agent text until TTS done). Enables VAD interrupt before first audio chunk. */
+  agentTurnActive: boolean
 }
 
 export interface AudioCaptureState {
@@ -36,6 +38,7 @@ export function useAudioCapture({
   onChunk,
   onInterrupt,
   isTTSActive,
+  agentTurnActive,
 }: UseAudioCaptureOptions): [
   AudioCaptureState,
   { start: () => Promise<void>; stop: () => void },
@@ -49,17 +52,19 @@ export function useAudioCapture({
   const streamRef = useRef<MediaStream | null>(null)
   const silenceFramesRef = useRef(0)
   const isTTSActiveRef = useRef(isTTSActive)
+  const agentTurnActiveRef = useRef(agentTurnActive)
   const onChunkRef = useRef(onChunk)
   const onInterruptRef = useRef(onInterrupt)
-  /** At most one interrupt per TTS episode; reset when TTS ends. */
+  /** At most one interrupt per assistant turn; reset when turn ends. */
   const interruptSentRef = useRef(false)
 
   useEffect(() => {
     isTTSActiveRef.current = isTTSActive
-    if (!isTTSActive) {
+    agentTurnActiveRef.current = agentTurnActive
+    if (!isTTSActive && !agentTurnActive) {
       interruptSentRef.current = false
     }
-  }, [isTTSActive])
+  }, [isTTSActive, agentTurnActive])
   useEffect(() => {
     onChunkRef.current = onChunk
   }, [onChunk])
@@ -95,7 +100,9 @@ export function useAudioCapture({
 
         setRmsLevel(rms)
 
-        const threshold = isTTSActiveRef.current
+        const interruptPhase =
+          isTTSActiveRef.current || agentTurnActiveRef.current
+        const threshold = interruptPhase
           ? VAD_THRESHOLD_DURING_TTS
           : VAD_THRESHOLD
 
@@ -104,7 +111,7 @@ export function useAudioCapture({
           silenceFramesRef.current = 0
           setIsUserSpeaking(true)
 
-          if (isTTSActiveRef.current && !interruptSentRef.current) {
+          if (interruptPhase && !interruptSentRef.current) {
             interruptSentRef.current = true
             onInterruptRef.current()
           }

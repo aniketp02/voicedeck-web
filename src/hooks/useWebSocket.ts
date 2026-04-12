@@ -18,6 +18,8 @@ export interface WebSocketState {
   agentText: string
   hasFinalTranscript: boolean
   isTTSActive: boolean
+  /** True from agent_text until local TTS playback ends (not server tts_done). */
+  agentTurnActive: boolean
   error: string | null
 }
 
@@ -27,6 +29,8 @@ export interface WebSocketControls {
   send: (msg: ClientMessage) => void
   onTTSChunk: MutableRefObject<((data: string) => void) | null>
   onTTSDone: MutableRefObject<(() => void) | null>
+  /** Call when local TTS playback actually ends (not when the server sends tts_done). */
+  endAssistantPlayback: () => void
 }
 
 const INITIAL_STATE: WebSocketState = {
@@ -37,6 +41,7 @@ const INITIAL_STATE: WebSocketState = {
   agentText: '',
   hasFinalTranscript: false,
   isTTSActive: false,
+  agentTurnActive: false,
   error: null,
 }
 
@@ -53,6 +58,14 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     }
   }, [])
 
+  const endAssistantPlayback = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      isTTSActive: false,
+      agentTurnActive: false,
+    }))
+  }, [])
+
   const handleMessage = useCallback((msg: ServerMessage) => {
     switch (msg.type) {
       case 'slide_change':
@@ -62,6 +75,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
           slideIndex: msg.index,
           agentText: '',
           hasFinalTranscript: false,
+          agentTurnActive: false,
         }))
         break
 
@@ -74,16 +88,27 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
         break
 
       case 'agent_text':
-        setState((s) => ({ ...s, agentText: msg.text }))
+        setState((s) => ({
+          ...s,
+          agentText: msg.text,
+          hasFinalTranscript: false,
+          agentTurnActive: true,
+        }))
         break
 
       case 'tts_chunk':
-        setState((s) => ({ ...s, isTTSActive: true, hasFinalTranscript: false }))
+        setState((s) => ({
+          ...s,
+          isTTSActive: true,
+          hasFinalTranscript: false,
+          agentTurnActive: true,
+        }))
         onTTSChunk.current?.(msg.data)
         break
 
       case 'tts_done':
-        setState((s) => ({ ...s, isTTSActive: false }))
+        // Server finished sending chunks; playback may continue for seconds.
+        // Clear isTTSActive / agentTurnActive in endAssistantPlayback when audio ends.
         onTTSDone.current?.()
         break
 
@@ -119,6 +144,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
           connected: false,
           isTTSActive: false,
           hasFinalTranscript: false,
+          agentTurnActive: false,
           error: !e.wasClean ? `Connection closed (code ${e.code})` : s.error,
         }))
       }
@@ -160,6 +186,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     send,
     onTTSChunk,
     onTTSDone,
+    endAssistantPlayback,
   }
   return [state, controls]
 }
