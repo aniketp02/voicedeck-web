@@ -72,13 +72,13 @@ export default function App() {
     onTTSDoneRef.current = audioPlayer.onDone
   }, [onTTSChunkRef, onTTSDoneRef, audioPlayer.onChunk, audioPlayer.onDone])
 
-  const prevTTSActiveRef = useRef(false)
+  const prevAgentTurnRef = useRef(false)
   useEffect(() => {
-    if (wsState.isTTSActive && !prevTTSActiveRef.current) {
+    if (wsState.agentTurnActive && !prevAgentTurnRef.current) {
       audioPlayer.initSession()
     }
-    prevTTSActiveRef.current = wsState.isTTSActive
-  }, [wsState.isTTSActive, audioPlayer])
+    prevAgentTurnRef.current = wsState.agentTurnActive
+  }, [wsState.agentTurnActive, audioPlayer])
 
   const lastRecordedTranscriptRef = useRef('')
 
