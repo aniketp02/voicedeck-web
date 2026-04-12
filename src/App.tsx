@@ -35,6 +35,8 @@ export default function App() {
       onTTSDone: onTTSDoneRef,
       endAssistantPlayback,
       clearAgentDisplay,
+      startAutoNarrate,
+      stopAutoNarrate,
     },
   ] = useWebSocket()
   const audioPlayer = useAudioPlayer(endAssistantPlayback)
@@ -186,6 +188,9 @@ export default function App() {
         totalSlides={totalSlides}
         title={selectedPresentation?.title}
         onReset={handleReset}
+        isAutoNarrating={wsState.isAutoNarrating}
+        onStartAutoNarrate={startAutoNarrate}
+        onStopAutoNarrate={stopAutoNarrate}
       />
 
       <div className="flex min-h-0 flex-1 overflow-hidden">

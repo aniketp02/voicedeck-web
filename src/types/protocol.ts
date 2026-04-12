@@ -5,6 +5,7 @@ export type ServerMessage =
   | { type: 'agent_text'; text: string }
   | { type: 'tts_chunk'; data: string }
   | { type: 'tts_done' }
+  | { type: 'auto_narrate_complete' }
   | { type: 'error'; message: string }
   | { type: 'pong' }
 
@@ -14,6 +15,8 @@ export type ClientMessage =
   | { type: 'audio_chunk'; data: string }
   | { type: 'interrupt' }
   | { type: 'navigate'; index: number }
+  | { type: 'start_auto_narrate' }
+  | { type: 'stop_auto_narrate' }
   | { type: 'ping' }
 
 export interface SlideData {

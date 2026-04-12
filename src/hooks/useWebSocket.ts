@@ -20,6 +20,8 @@ export interface WebSocketState {
   isTTSActive: boolean
   /** True from agent_text until local TTS playback ends (not server tts_done). */
   agentTurnActive: boolean
+  /** True while the server is running auto-narration mode. */
+  isAutoNarrating: boolean
   error: string | null
 }
 
@@ -34,6 +36,8 @@ export interface WebSocketControls {
   endAssistantPlayback: () => void
   /** Clear in-progress assistant text (e.g. user interrupt) so the UI does not show stale copy. */
   clearAgentDisplay: () => void
+  startAutoNarrate: () => void
+  stopAutoNarrate: () => void
 }
 
 const INITIAL_STATE: WebSocketState = {
@@ -45,6 +49,7 @@ const INITIAL_STATE: WebSocketState = {
   hasFinalTranscript: false,
   isTTSActive: false,
   agentTurnActive: false,
+  isAutoNarrating: false,
   error: null,
 }
 
@@ -128,6 +133,14 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
         onTTSDone.current?.()
         break
 
+      case 'auto_narrate_complete':
+        setState((s) => ({
+          ...s,
+          isAutoNarrating: false,
+          agentText: s.agentText || 'Presentation complete.',
+        }))
+        break
+
       case 'error':
         setState((s) => ({ ...s, error: msg.message }))
         break
@@ -161,6 +174,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
           isTTSActive: false,
           hasFinalTranscript: false,
           agentTurnActive: false,
+          isAutoNarrating: false,
           error: !e.wasClean ? `Connection closed (code ${e.code})` : s.error,
         }))
       }
@@ -197,6 +211,16 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     [send],
   )
 
+  const startAutoNarrate = useCallback(() => {
+    setState((s) => ({ ...s, isAutoNarrating: true }))
+    send({ type: 'start_auto_narrate' })
+  }, [send])
+
+  const stopAutoNarrate = useCallback(() => {
+    setState((s) => ({ ...s, isAutoNarrating: false }))
+    send({ type: 'stop_auto_narrate' })
+  }, [send])
+
   useEffect(() => {
     return () => {
       ws.current?.close()
@@ -212,6 +236,8 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     onTTSDone,
     endAssistantPlayback,
     clearAgentDisplay,
+    startAutoNarrate,
+    stopAutoNarrate,
   }
   return [state, controls]
 }
