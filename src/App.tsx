@@ -253,16 +253,31 @@ function ConversationFooter({
 
   const isEmpty = history.length === 0 && !currentTranscript && !currentAgentText
 
-  // While the assistant turn is in progress, history already contains that turn as the
-  // last item (updated on each agent_text). Skip it here so we only show the live row.
+  // While a turn is still "live", history may already include the same text (final
+  // transcript appended, or agent_text updates). Omit the matching trailing row so we
+  // only render the live row.
+  const showLiveUser =
+    (voiceState === 'user-speaking' || voiceState === 'listening') &&
+    currentTranscript.trim()
   const showLiveAssistant =
     (voiceState === 'thinking' || voiceState === 'ai-speaking') && currentAgentText.trim()
-  const displayHistory =
+
+  let displayHistory = history
+  if (
     showLiveAssistant &&
-    history.length > 0 &&
-    history[history.length - 1]?.role === 'assistant'
-      ? history.slice(0, -1)
-      : history
+    displayHistory.length > 0 &&
+    displayHistory[displayHistory.length - 1]?.role === 'assistant'
+  ) {
+    displayHistory = displayHistory.slice(0, -1)
+  }
+  if (
+    showLiveUser &&
+    displayHistory.length > 0 &&
+    displayHistory[displayHistory.length - 1]?.role === 'user' &&
+    displayHistory[displayHistory.length - 1]?.text === currentTranscript.trim()
+  ) {
+    displayHistory = displayHistory.slice(0, -1)
+  }
 
   return (
     <footer className="border-t border-border/50 bg-background/80 backdrop-blur dark:border-white/10">
@@ -280,10 +295,7 @@ function ConversationFooter({
               <TurnRow key={i} role={turn.role} text={turn.text} dim />
             ))}
 
-            {(voiceState === 'user-speaking' || voiceState === 'listening') &&
-            currentTranscript.trim() ? (
-              <TurnRow role="user" text={currentTranscript} live />
-            ) : null}
+            {showLiveUser ? <TurnRow role="user" text={currentTranscript} live /> : null}
 
             {showLiveAssistant ? (
               <TurnRow role="assistant" text={currentAgentText} live />

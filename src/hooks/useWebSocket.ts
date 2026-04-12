@@ -71,6 +71,10 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
       ...s,
       isTTSActive: false,
       agentTurnActive: false,
+      // Deepgram transcript persists until the next STT message; clear it when playback
+      // ends so the footer does not show the last user line as a live placeholder.
+      transcript: '',
+      hasFinalTranscript: false,
     }))
   }, [])
 
@@ -114,6 +118,9 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
           agentText: msg.text,
           hasFinalTranscript: false,
           agentTurnActive: true,
+          // User turn is already in conversation history; drop STT text so it does not
+          // linger through thinking / ai-speaking / listening.
+          transcript: '',
         }))
         break
 
