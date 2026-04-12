@@ -253,6 +253,17 @@ function ConversationFooter({
 
   const isEmpty = history.length === 0 && !currentTranscript && !currentAgentText
 
+  // While the assistant turn is in progress, history already contains that turn as the
+  // last item (updated on each agent_text). Skip it here so we only show the live row.
+  const showLiveAssistant =
+    (voiceState === 'thinking' || voiceState === 'ai-speaking') && currentAgentText.trim()
+  const displayHistory =
+    showLiveAssistant &&
+    history.length > 0 &&
+    history[history.length - 1]?.role === 'assistant'
+      ? history.slice(0, -1)
+      : history
+
   return (
     <footer className="border-t border-border/50 bg-background/80 backdrop-blur dark:border-white/10">
       <div
@@ -265,7 +276,7 @@ function ConversationFooter({
           </p>
         ) : (
           <div className="space-y-2">
-            {history.map((turn, i) => (
+            {displayHistory.map((turn, i) => (
               <TurnRow key={i} role={turn.role} text={turn.text} dim />
             ))}
 
@@ -274,8 +285,7 @@ function ConversationFooter({
               <TurnRow role="user" text={currentTranscript} live />
             ) : null}
 
-            {(voiceState === 'thinking' || voiceState === 'ai-speaking') &&
-            currentAgentText.trim() ? (
+            {showLiveAssistant ? (
               <TurnRow role="assistant" text={currentAgentText} live />
             ) : null}
           </div>
