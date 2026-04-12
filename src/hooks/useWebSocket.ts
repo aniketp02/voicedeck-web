@@ -27,6 +27,7 @@ export interface WebSocketControls {
   connect: (presentationId?: string) => void
   disconnect: () => void
   send: (msg: ClientMessage) => void
+  navigate: (index: number) => void
   onTTSChunk: MutableRefObject<((data: string) => void) | null>
   onTTSDone: MutableRefObject<(() => void) | null>
   /** Call when local TTS playback actually ends (not when the server sends tts_done). */
@@ -83,7 +84,8 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
         setState((s) => ({
           ...s,
           transcript: msg.text,
-          hasFinalTranscript: msg.is_final && msg.text.trim().length > 0,
+          hasFinalTranscript:
+            (msg.speech_final ?? msg.is_final) && msg.text.trim().length > 0,
         }))
         break
 
@@ -174,6 +176,13 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     setState({ ...INITIAL_STATE })
   }, [])
 
+  const navigate = useCallback(
+    (index: number) => {
+      send({ type: 'navigate', index })
+    },
+    [send],
+  )
+
   useEffect(() => {
     return () => {
       ws.current?.close()
@@ -184,6 +193,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     connect,
     disconnect,
     send,
+    navigate,
     onTTSChunk,
     onTTSDone,
     endAssistantPlayback,

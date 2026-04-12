@@ -26,6 +26,8 @@ export function useAudioPlayer(
   const isAppendingRef = useRef(false)
   /** True while a TTS stream is active (until onDone teardown). */
   const sessionActiveRef = useRef(false)
+  /** True from stop() until the next initSession() — blocks onChunk lazy-init. */
+  const stoppingRef = useRef(false)
   const objectUrlRef = useRef<string | null>(null)
 
   const appendNextRef = useRef<() => void>(() => {})
@@ -70,6 +72,7 @@ export function useAudioPlayer(
   }, [appendNext])
 
   const initSession = useCallback(() => {
+    stoppingRef.current = false
     // Avoid tearing down a session that onChunk already started (lazy init + Plan 05 rising-edge effect).
     if (sessionActiveRef.current && mediaSourceRef.current) {
       return
@@ -112,6 +115,8 @@ export function useAudioPlayer(
 
   const onChunk = useCallback(
     (base64: string) => {
+      if (stoppingRef.current) return
+
       if (!sessionActiveRef.current) {
         initSession()
       }
@@ -159,6 +164,7 @@ export function useAudioPlayer(
   }, [teardown])
 
   const stop = useCallback(() => {
+    stoppingRef.current = true
     sessionActiveRef.current = false
     chunkQueueRef.current = []
     isAppendingRef.current = false

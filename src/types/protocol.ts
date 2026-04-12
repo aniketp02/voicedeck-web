@@ -1,6 +1,6 @@
 // All messages the server can send to the client
 export type ServerMessage =
-  | { type: 'transcript'; text: string; is_final: boolean }
+  | { type: 'transcript'; text: string; is_final: boolean; speech_final?: boolean }
   | { type: 'slide_change'; index: number; slide: SlideData }
   | { type: 'agent_text'; text: string }
   | { type: 'tts_chunk'; data: string }
@@ -13,6 +13,7 @@ export type ClientMessage =
   | { type: 'start'; presentation_id?: string }
   | { type: 'audio_chunk'; data: string }
   | { type: 'interrupt' }
+  | { type: 'navigate'; index: number }
   | { type: 'ping' }
 
 export interface SlideData {
