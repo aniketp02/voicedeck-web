@@ -22,7 +22,7 @@ export interface WebSocketState {
 }
 
 export interface WebSocketControls {
-  connect: () => void
+  connect: (presentationId?: string) => void
   disconnect: () => void
   send: (msg: ClientMessage) => void
   onTTSChunk: MutableRefObject<((data: string) => void) | null>
@@ -96,43 +96,51 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     }
   }, [])
 
-  const connect = useCallback(() => {
-    if (ws.current?.readyState === WebSocket.OPEN) return
+  const connect = useCallback(
+    (presentationId: string = 'clinical-trials') => {
+      if (ws.current?.readyState === WebSocket.OPEN) return
 
-    const socket = new WebSocket(WS_URL)
-    ws.current = socket
+      const socket = new WebSocket(WS_URL)
+      ws.current = socket
 
-    socket.onopen = () => {
-      setState((s) => ({ ...s, connected: true, error: null }))
-      socket.send(JSON.stringify({ type: 'start' } satisfies ClientMessage))
-    }
-
-    socket.onclose = (e) => {
-      setState((s) => ({
-        ...s,
-        connected: false,
-        isTTSActive: false,
-        hasFinalTranscript: false,
-        error: !e.wasClean ? `Connection closed (code ${e.code})` : s.error,
-      }))
-    }
-
-    socket.onerror = () => {
-      setState((s) => ({
-        ...s,
-        error: 'WebSocket connection failed. Is the backend running?',
-      }))
-    }
-
-    socket.onmessage = (event) => {
-      try {
-        const msg: ServerMessage = JSON.parse(event.data as string)
-        handleMessage(msg)
-      } catch {
-        console.warn('Received non-JSON WebSocket message:', event.data)
+      socket.onopen = () => {
+        setState((s) => ({ ...s, connected: true, error: null }))
+        socket.send(
+          JSON.stringify({
+            type: 'start',
+            presentation_id: presentationId,
+          } satisfies ClientMessage),
+        )
       }
-    }
-  }, [handleMessage])
+
+      socket.onclose = (e) => {
+        setState((s) => ({
+          ...s,
+          connected: false,
+          isTTSActive: false,
+          hasFinalTranscript: false,
+          error: !e.wasClean ? `Connection closed (code ${e.code})` : s.error,
+        }))
+      }
+
+      socket.onerror = () => {
+        setState((s) => ({
+          ...s,
+          error: 'WebSocket connection failed. Is the backend running?',
+        }))
+      }
+
+      socket.onmessage = (event) => {
+        try {
+          const msg: ServerMessage = JSON.parse(event.data as string)
+          handleMessage(msg)
+        } catch {
+          console.warn('Received non-JSON WebSocket message:', event.data)
+        }
+      }
+    },
+    [handleMessage],
+  )
 
   const disconnect = useCallback(() => {
     ws.current?.close(1000, 'User disconnected')

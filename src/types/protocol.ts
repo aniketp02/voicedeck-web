@@ -10,7 +10,7 @@ export type ServerMessage =
 
 // All messages the client can send to the server
 export type ClientMessage =
-  | { type: 'start' }
+  | { type: 'start'; presentation_id?: string }
   | { type: 'audio_chunk'; data: string }
   | { type: 'interrupt' }
   | { type: 'ping' }
@@ -22,6 +22,14 @@ export interface SlideData {
 
 export interface Slide extends SlideData {
   index: number
+}
+
+/** Catalog entry — matches GET /presentations (proxied as /api/presentations). */
+export interface PresentationMeta {
+  id: string
+  title: string
+  description: string
+  slide_count: number
 }
 
 // Voice state drives orb hue and status label

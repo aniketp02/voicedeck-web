@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Header } from '@/components/Header'
 import { OrbPanel } from '@/components/OrbPanel'
+import { PresentationSelector } from '@/components/PresentationSelector'
 import { SlideNav } from '@/components/SlideNav'
 import { SlideView } from '@/components/SlideView'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -9,12 +10,13 @@ import { useAudioCapture } from '@/hooks/useAudioCapture'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { useVoiceState } from '@/hooks/useVoiceState'
 import { useWebSocket } from '@/hooks/useWebSocket'
-
-const TOTAL_SLIDES = 6
+import type { PresentationMeta } from '@/types/protocol'
 
 export default function App() {
-  const [started, setStarted] = useState(false)
   const [micDenied, setMicDenied] = useState(false)
+  const [selectedPresentation, setSelectedPresentation] =
+    useState<PresentationMeta | null>(null)
+  const [started, setStarted] = useState(false)
 
   const [wsState, { connect, send, onTTSChunk: onTTSChunkRef, onTTSDone: onTTSDoneRef }] =
     useWebSocket()
@@ -50,10 +52,14 @@ export default function App() {
     prevTTSActiveRef.current = wsState.isTTSActive
   }, [wsState.isTTSActive, audioPlayer])
 
-  const handlePresentationStart = useCallback(() => {
-    setStarted(true)
-    connect()
-  }, [connect])
+  const handleSelectPresentation = useCallback(
+    (presentation: PresentationMeta) => {
+      setSelectedPresentation(presentation)
+      setStarted(true)
+      connect(presentation.id)
+    },
+    [connect],
+  )
 
   const handleMicStart = useCallback(async () => {
     setMicDenied(false)
@@ -68,31 +74,16 @@ export default function App() {
     captureControls.stop()
   }, [captureControls])
 
+  // Both registered decks currently use 6 slides; slide_count comes from the API for future decks.
+  const totalSlides = selectedPresentation?.slide_count ?? 6
+
   if (!started) {
     return (
-      <div className="hero-bg relative flex min-h-screen flex-col items-center justify-center gap-8 px-4">
-        <div className="absolute right-4 top-4 sm:right-8 sm:top-6">
+      <div className="relative">
+        <div className="absolute right-4 top-4 z-10 sm:right-8 sm:top-6">
           <ThemeToggle />
         </div>
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/70 px-4 py-1.5 text-xs font-medium text-indigo-700 shadow-sm backdrop-blur-sm dark:border-indigo-500/30 dark:bg-slate-900/70 dark:text-indigo-200">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Voice-Interactive Presentation
-          </div>
-          <h1 className="text-5xl font-bold leading-tight tracking-tight text-foreground">
-            AI in Clinical Trials
-          </h1>
-          <p className="max-w-md text-lg text-muted-foreground">
-            Ask questions, get answers — the slides follow the conversation.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handlePresentationStart}
-          className="rounded-2xl bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground shadow-lg shadow-indigo-200/80 transition-all hover:opacity-90 hover:shadow-indigo-300/90 active:scale-95 dark:shadow-indigo-950/50"
-        >
-          Start Presentation
-        </button>
+        <PresentationSelector onSelect={handleSelectPresentation} />
       </div>
     )
   }
@@ -113,13 +104,14 @@ export default function App() {
       <Header
         connected={wsState.connected}
         slideIndex={wsState.slideIndex}
-        totalSlides={TOTAL_SLIDES}
+        totalSlides={totalSlides}
+        title={selectedPresentation?.title}
       />
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-h-0 flex-col bg-background" style={{ width: '65%' }}>
-          <SlideView slide={wsState.currentSlide} totalSlides={TOTAL_SLIDES} />
-          <SlideNav total={TOTAL_SLIDES} current={wsState.slideIndex} />
+          <SlideView slide={wsState.currentSlide} totalSlides={totalSlides} />
+          <SlideNav total={totalSlides} current={wsState.slideIndex} />
         </div>
         <div className="min-h-0 overflow-y-auto bg-slate-950" style={{ width: '35%' }}>
           <OrbPanel
