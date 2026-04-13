@@ -6,8 +6,8 @@
         try {
           var k = 'voicedeck-theme'
           var t = localStorage.getItem(k)
-          if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches))
-            document.documentElement.classList.add('dark')
+          // Default is dark; only skip when the user explicitly chose light.
+          if (t !== 'light') document.documentElement.classList.add('dark')
         } catch (e) {}
       })()
     </script>
