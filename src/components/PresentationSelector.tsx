@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 
+import { presentationsUrl } from '@/lib/apiOrigin'
 import type { PresentationMeta } from '@/types/protocol'
 
 interface Props {
@@ -13,7 +14,7 @@ type FetchState =
   | { status: 'ready'; presentations: PresentationMeta[] }
 
 async function requestPresentations(): Promise<PresentationMeta[]> {
-  const res = await fetch('/api/presentations')
+  const res = await fetch(presentationsUrl())
   if (!res.ok) throw new Error(`Server returned ${res.status}`)
   return res.json() as Promise<PresentationMeta[]>
 }

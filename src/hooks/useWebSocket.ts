@@ -6,9 +6,8 @@ import {
   type MutableRefObject,
 } from 'react'
 
+import { webSocketUrl } from '@/lib/apiOrigin'
 import type { ClientMessage, ServerMessage, Slide } from '@/types/protocol'
-
-const WS_URL = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
 
 export interface WebSocketState {
   connected: boolean
@@ -161,7 +160,7 @@ export function useWebSocket(): [WebSocketState, WebSocketControls] {
     (presentationId: string = 'clinical-trials') => {
       if (ws.current?.readyState === WebSocket.OPEN) return
 
-      const socket = new WebSocket(WS_URL)
+      const socket = new WebSocket(webSocketUrl())
       ws.current = socket
 
       socket.onopen = () => {
